@@ -21,12 +21,12 @@ bool BSHoverNode::init(SafeLevel const& level, GJGameLevel* gameLevel, MiniFunct
 
     m_callback = callback;
 
-    auto bg = CCScale9Sprite::createWithSpriteFrameName("square02_001.png");
-    bg->setContentSize({ 80.0f, 70.0f });
-    bg->setPosition(40.0f, 35.0f);
-    bg->setColor({ 0, 0, 0 });
-    bg->setOpacity(150);
-    addChild(bg);
+    m_background = CCScale9Sprite::createWithSpriteFrameName("square02_001.png");
+    m_background->setContentSize({ 80.0f, 70.0f });
+    m_background->setPosition(40.0f, 35.0f);
+    m_background->setColor({ 0, 0, 0 });
+    m_background->setOpacity(150);
+    addChild(m_background);
 
     auto dailyLabel = CCLabelBMFont::create(fmt::format("{} #{}", level.weekly ? "Weekly" : "Daily", level.timelyID).c_str(), "goldFont.fnt");
     dailyLabel->setPosition(40.0f, 65.0f);
@@ -45,8 +45,8 @@ bool BSHoverNode::init(SafeLevel const& level, GJGameLevel* gameLevel, MiniFunct
 
     setContentWidth(std::max(nameLabel->getScaledContentWidth() + 6.0f, std::max(creatorLabel->getScaledContentWidth() + 6.0f, 80.0f)));
 
-    bg->setContentWidth(getContentWidth());
-    bg->setPositionX(getContentWidth() / 2);
+    m_background->setContentWidth(getContentWidth());
+    m_background->setPositionX(getContentWidth() / 2);
     dailyLabel->setPositionX(getContentWidth() / 2);
     nameLabel->setPositionX(getContentWidth() / 2);
     creatorLabel->setPositionX(getContentWidth() / 2);
@@ -93,23 +93,39 @@ bool BSHoverNode::init(SafeLevel const& level, GJGameLevel* gameLevel, MiniFunct
     viewMenu->addChild(closeButton);
 
     setTouchEnabled(true);
+    setKeypadEnabled(true);
     handleTouchPriority(this);
 
     return true;
 }
 
-void BSHoverNode::registerWithTouchDispatcher() {
-    CCTouchDispatcher::get()->addTargetedDelegate(this, -500, true);
+void BSHoverNode::close() {
+    setTouchEnabled(false);
+    setKeypadEnabled(false);
+    removeFromParent();
+    m_callback();
 }
 
 void BSHoverNode::keyBackClicked() {
     close();
 }
 
-void BSHoverNode::close() {
-    setTouchEnabled(false);
-    removeFromParent();
-    m_callback();
+void BSHoverNode::registerWithTouchDispatcher() {
+    CCTouchDispatcher::get()->addTargetedDelegate(this, -500, true);
+}
+
+// Thanks Firee https://github.com/FireMario211/Object-Workshop/blob/v1.1.3/src/nodes/ExtPreviewBG.cpp#L40
+bool BSHoverNode::ccTouchBegan(CCTouch* touch, CCEvent* event) {
+    if (!CCLayer::ccTouchBegan(touch, event)) return false;
+
+    auto touchPos = m_background->convertToNodeSpace(CCDirector::sharedDirector()->convertToGL(touch->getLocationInView()));
+    auto boundingBox = m_background->boundingBox();
+    return CCRect {
+        boundingBox.getMinX(),
+        boundingBox.getMinY(),
+        boundingBox.getMaxX(),
+        boundingBox.getMaxY()
+    }.intersectsRect({ touchPos.x, touchPos.y, touchPos.x, touchPos.y });
 }
 
 BSHoverNode::~BSHoverNode() {

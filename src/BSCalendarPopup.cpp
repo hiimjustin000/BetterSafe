@@ -2,9 +2,9 @@
 
 using namespace geode::prelude;
 
-BSCalendarPopup* BSCalendarPopup::create(DailyLevelPage* page, bool weekly) {
+BSCalendarPopup* BSCalendarPopup::create(CCObject* obj, SEL_MenuHandler onSafe, bool weekly) {
     auto ret = new BSCalendarPopup();
-    if (ret->initAnchored(300.0f, 280.0f, page, weekly)) {
+    if (ret->initAnchored(300.0f, 280.0f, obj, onSafe, weekly)) {
         ret->autorelease();
         return ret;
     }
@@ -12,7 +12,7 @@ BSCalendarPopup* BSCalendarPopup::create(DailyLevelPage* page, bool weekly) {
     return nullptr;
 }
 
-bool BSCalendarPopup::setup(DailyLevelPage* page, bool weekly) {
+bool BSCalendarPopup::setup(CCObject* obj, SEL_MenuHandler onSafe, bool weekly) {
     m_noElasticity = true;
     m_weekly = weekly;
 
@@ -111,8 +111,8 @@ bool BSCalendarPopup::setup(DailyLevelPage* page, bool weekly) {
     m_loadingCircle->retain();
     m_loadingCircle->show();
 
-    auto safeButton = CCMenuItemExt::createSpriteExtraWithFrameName("GJ_safeBtn_001.png", 1.0f, [this, page](auto sender) {
-        page->onTheSafe(sender);
+    auto safeButton = CCMenuItemExt::createSpriteExtraWithFrameName("GJ_safeBtn_001.png", 1.0f, [this, obj, onSafe](auto sender) {
+        (obj->*onSafe)(sender);
     });
     safeButton->setPosition(340.0f, 25.0f);
     safeButton->setTag(91508); // my birthday
@@ -121,7 +121,6 @@ bool BSCalendarPopup::setup(DailyLevelPage* page, bool weekly) {
     auto refreshButton = CCMenuItemExt::createSpriteExtraWithFrameName("GJ_updateBtn_001.png", 1.0f, [this, weekly](auto) {
         m_loadingCircle->setVisible(true);
         if (m_hoverNode) m_hoverNode->close();
-        m_selected = nullptr;
         m_calendarMenu->removeAllChildren();
         m_prevButton->setVisible(false);
         m_nextButton->setVisible(false);
@@ -212,7 +211,6 @@ void BSCalendarPopup::loadMonth() {
     if (m_hoverNode) m_hoverNode->close();
 
     m_calendarMenu->removeAllChildren();
-    m_selected = nullptr;
     m_monthLabel->setString(fmt::format("{} {}", MONTHS[m_month - 1], m_year).c_str());
     m_monthButton->updateSprite();
     m_monthButton->setEnabled(false);
@@ -294,15 +292,9 @@ void BSCalendarPopup::setupMonth() {
         }
         auto hoverButton = CCMenuItemExt::createSpriteExtra(diffIcon, [this, gameLevel, safeLevel](auto sender) {
             if (m_hoverNode) m_hoverNode->close();
-            if (sender != m_selected) {
-                m_hoverNode = BSHoverNode::create(safeLevel, gameLevel, [this] {
-                    m_hoverNode = nullptr;
-                });
-                m_hoverNode->setPosition(sender->getPosition() + CCPoint { 0.0f, sender->getContentHeight() / 2 + m_hoverNode->getContentHeight() / 2 + 5.0f });
-                m_mainLayer->addChild(m_hoverNode, 200);
-                m_selected = sender;
-            }
-            else m_selected = nullptr;
+            m_hoverNode = BSHoverNode::create(safeLevel, gameLevel, [this] { m_hoverNode = nullptr; });
+            m_hoverNode->setPosition(sender->getPosition() + CCPoint { 0.0f, sender->getContentHeight() / 2 + m_hoverNode->getContentHeight() / 2 + 5.0f });
+            m_mainLayer->addChild(m_hoverNode, 200);
         });
         hoverButton->setPosition({ (i + firstWeekday) % 7 * 38.0f + 36.0f, 219.0f - floorf(((float)i + firstWeekday) / 7) * 38.0f });
         m_calendarMenu->addChild(hoverButton);
