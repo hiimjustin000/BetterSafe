@@ -1,0 +1,39 @@
+{
+    "geode": "3.5.0",
+    "gd": {
+        "android": "2.206",
+        "win": "2.206",
+        "mac": "2.206"
+    },
+    "version": "v1.0.0",
+    "id": "hiimjustin000.better_safe",
+    "name": "Better Safe",
+    "developer": "hiimjustin000",
+    "description": "A mod that expands The Safe with a calendar.",
+    "repository": "https://github.com/hiimjustin000/BetterSafe",
+    "settings": {
+        "sunday-first": {
+            "name": "Sunday First",
+            "description": "Start the week on Sunday instead of Monday.",
+            "type": "bool",
+            "default": false
+        }
+    },
+    "resources": {
+        "sprites": [
+            "resources/*.png"
+        ]
+    },
+    "links": {
+        "community": "https://discord.gg/QVKmbvBXA7",
+        "source": "https://github.com/hiimjustin000/BetterSafe",
+        "homepage": "https://www.hiimjustin000.com"
+    },
+    "tags": [
+        "content",
+        "enhancement",
+        "interface",
+        "online",
+        "utility"
+    ]
+}
