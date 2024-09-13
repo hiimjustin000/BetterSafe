@@ -1,4 +1,7 @@
 # Better Safe Changelog
+## v1.0.2 (2024-09-12)
+- Added More Difficulties and Demons In Between support
+
 ## v1.0.1 (2024-09-12)
 - Fixed an incompatibility with the mod "Overcharged Main Menu" by Weebify and ninXout
 - Fixed some issues with the level previews

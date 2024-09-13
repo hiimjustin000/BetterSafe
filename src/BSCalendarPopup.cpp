@@ -275,8 +275,24 @@ void BSCalendarPopup::setupMonth() {
         if (gameLevelIt == levels.end()) continue;
         auto gameLevel = *gameLevelIt;
 
-        auto diffIcon = CCSprite::createWithSpriteFrameName(safeLevel.difficulty == -1 ?
-            "diffIcon_auto_btn_001.png" : fmt::format("diffIcon_{:02d}_btn_001.png", safeLevel.difficulty).c_str());
+        auto diffFrame = safeLevel.difficulty == -1 ? "diffIcon_auto_btn_001.png" : fmt::format("diffIcon_{:02d}_btn_001.png", safeLevel.difficulty);
+        if (auto moreDifficulties = Loader::get()->getLoadedMod("uproxide.more_difficulties")) {
+            auto legacy = moreDifficulties->getSettingValue<bool>("legacy-difficulties");
+            if (moreDifficulties->getSavedValue<bool>("casual", true) && safeLevel.difficulty == 3 && safeLevel.stars == 4)
+                diffFrame = legacy ? "uproxide.more_difficulties/MD_Difficulty04Small_Legacy.png" : "uproxide.more_difficulties/MD_Difficulty04Small.png";
+            else if (moreDifficulties->getSavedValue<bool>("tough", true) && safeLevel.difficulty == 4 && safeLevel.stars == 7)
+                diffFrame = legacy ? "uproxide.more_difficulties/MD_Difficulty07Small_Legacy.png" : "uproxide.more_difficulties/MD_Difficulty07Small.png";
+            else if (moreDifficulties->getSavedValue<bool>("cruel", true) && safeLevel.difficulty == 5 && safeLevel.stars == 9)
+                diffFrame = legacy ? "uproxide.more_difficulties/MD_Difficulty09Small_Legacy.png" : "uproxide.more_difficulties/MD_Difficulty09Small.png";
+        }
+        auto hasBetweenDemon = false;
+        if (auto demonsInBetween = Loader::get()->getLoadedMod("hiimjustin000.demons_in_between")) {
+            if (demonsInBetween->getSettingValue<bool>("enable-difficulties") && safeLevel.tier > 0) {
+                diffFrame = fmt::format("hiimjustin000.demons_in_between/DIB_{:02d}_001.png", DIFFICULTY_INDICES[safeLevel.tier]);
+                hasBetweenDemon = true;
+            }
+        }
+        auto diffIcon = CCSprite::createWithSpriteFrameName(diffFrame.c_str());
         diffIcon->setScale(0.75f);
         auto featureFrame = "";
         switch (safeLevel.feature) {
@@ -288,6 +304,7 @@ void BSCalendarPopup::setupMonth() {
         if (safeLevel.feature > 0) {
             auto featureIcon = CCSprite::createWithSpriteFrameName(featureFrame);
             featureIcon->setPosition(diffIcon->getContentSize() / 2 + CCPoint { 0.0f, -5.5f });
+            if (hasBetweenDemon) featureIcon->setPositionY(9.5f);
             diffIcon->addChild(featureIcon, -2);
         }
         auto hoverButton = CCMenuItemExt::createSpriteExtra(diffIcon, [this, gameLevel, safeLevel](auto sender) {

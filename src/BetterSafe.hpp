@@ -21,6 +21,7 @@ struct SafeLevel {
     int coins;
     bool coinsVerified;
     bool weekly;
+    int tier;
 };
 
 class BetterSafe {

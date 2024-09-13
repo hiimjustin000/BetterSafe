@@ -40,7 +40,8 @@ void BetterSafe::loadDailySafe(EventListener<web::WebTask>&& listenerRef, Loadin
                         .feature = PROPERTY_OR_DEFAULT(level, "feature", is_number, as_int, 0),
                         .coins = PROPERTY_OR_DEFAULT(level, "coins", is_number, as_int, 0),
                         .coinsVerified = PROPERTY_OR_DEFAULT(level, "coinsVerified", is_bool, as_bool, false),
-                        .weekly = false
+                        .weekly = false,
+                        .tier = PROPERTY_OR_DEFAULT(level, "tier", is_number, as_int, 0)
                     });
                 }
                 callback();
@@ -84,7 +85,8 @@ void BetterSafe::loadWeeklySafe(EventListener<web::WebTask>&& listenerRef, Loadi
                         .feature = PROPERTY_OR_DEFAULT(level, "feature", is_number, as_int, 0),
                         .coins = PROPERTY_OR_DEFAULT(level, "coins", is_number, as_int, 0),
                         .coinsVerified = PROPERTY_OR_DEFAULT(level, "coinsVerified", is_bool, as_bool, false),
-                        .weekly = true
+                        .weekly = true,
+                        .tier = PROPERTY_OR_DEFAULT(level, "tier", is_number, as_int, 0)
                     });
                 }
                 callback();
