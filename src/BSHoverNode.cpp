@@ -21,7 +21,7 @@ bool BSHoverNode::init(SafeLevel const& level, GJGameLevel* gameLevel, MiniFunct
 
     m_callback = callback;
 
-    m_background = CCScale9Sprite::createWithSpriteFrameName("square02_001.png");
+    m_background = CCScale9Sprite::create("square02_001.png");
     m_background->setContentSize({ 80.0f, 70.0f });
     m_background->setPosition(40.0f, 35.0f);
     m_background->setColor({ 0, 0, 0 });

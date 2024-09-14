@@ -1,4 +1,7 @@
 # Better Safe Changelog
+## v1.0.3 (2024-09-14)
+- Fixed a bug where the game would crash when viewing the daily/weekly level previews
+
 ## v1.0.2 (2024-09-12)
 - Added More Difficulties and Demons In Between support
 
