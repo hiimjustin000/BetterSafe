@@ -33,13 +33,6 @@ void BetterSafe::loadDailySafe(EventListener<web::WebTask>&& listenerRef, Loadin
                         .id = PROPERTY_OR_DEFAULT(level, "id", is_number, as_int, 0),
                         .timelyID = PROPERTY_OR_DEFAULT(level, "dailyID", is_number, as_int, 0),
                         .dates = dates,
-                        .name = PROPERTY_OR_DEFAULT(level, "name", is_string, as_string, ""),
-                        .creator = PROPERTY_OR_DEFAULT(level, "creator", is_string, as_string, ""),
-                        .stars = PROPERTY_OR_DEFAULT(level, "stars", is_number, as_int, 0),
-                        .difficulty = PROPERTY_OR_DEFAULT(level, "difficulty", is_number, as_int, 0),
-                        .feature = PROPERTY_OR_DEFAULT(level, "feature", is_number, as_int, 0),
-                        .coins = PROPERTY_OR_DEFAULT(level, "coins", is_number, as_int, 0),
-                        .coinsVerified = PROPERTY_OR_DEFAULT(level, "coinsVerified", is_bool, as_bool, false),
                         .weekly = false,
                         .tier = PROPERTY_OR_DEFAULT(level, "tier", is_number, as_int, 0)
                     });
@@ -78,13 +71,6 @@ void BetterSafe::loadWeeklySafe(EventListener<web::WebTask>&& listenerRef, Loadi
                         .id = PROPERTY_OR_DEFAULT(level, "id", is_number, as_int, 0),
                         .timelyID = PROPERTY_OR_DEFAULT(level, "weeklyID", is_number, as_int, 0),
                         .dates = dates,
-                        .name = PROPERTY_OR_DEFAULT(level, "name", is_string, as_string, ""),
-                        .creator = PROPERTY_OR_DEFAULT(level, "creator", is_string, as_string, ""),
-                        .stars = PROPERTY_OR_DEFAULT(level, "stars", is_number, as_int, 0),
-                        .difficulty = PROPERTY_OR_DEFAULT(level, "difficulty", is_number, as_int, 0),
-                        .feature = PROPERTY_OR_DEFAULT(level, "feature", is_number, as_int, 0),
-                        .coins = PROPERTY_OR_DEFAULT(level, "coins", is_number, as_int, 0),
-                        .coinsVerified = PROPERTY_OR_DEFAULT(level, "coinsVerified", is_bool, as_bool, false),
                         .weekly = true,
                         .tier = PROPERTY_OR_DEFAULT(level, "tier", is_number, as_int, 0)
                     });
@@ -110,4 +96,11 @@ std::vector<SafeLevel> BetterSafe::getMonth(int year, int month, bool weekly) {
         }
     }
     return levels;
+}
+
+int BetterSafe::getDifficultyFromLevel(GJGameLevel* level) {
+    if (level->m_demon > 0) return level->m_demonDifficulty > 0 ? level->m_demonDifficulty + 4 : 6;
+    else if (level->m_autoLevel) return -1;
+    else if (level->m_ratings < 5) return 0;
+    else return level->m_ratingsSum / level->m_ratings;
 }

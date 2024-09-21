@@ -33,12 +33,12 @@ bool BSHoverNode::init(SafeLevel const& level, GJGameLevel* gameLevel, MiniFunct
     dailyLabel->setScale(0.3f);
     addChild(dailyLabel);
 
-    auto nameLabel = CCLabelBMFont::create(level.name.c_str(), "bigFont.fnt");
+    auto nameLabel = CCLabelBMFont::create(gameLevel->m_levelName.c_str(), "bigFont.fnt");
     nameLabel->setPosition(40.0f, 55.0f);
     nameLabel->setScale(0.5f);
     addChild(nameLabel);
 
-    auto creatorLabel = CCLabelBMFont::create(fmt::format("by {}", level.creator).c_str(), "goldFont.fnt");
+    auto creatorLabel = CCLabelBMFont::create(("by " + std::string(gameLevel->m_creatorName)).c_str(), "goldFont.fnt");
     creatorLabel->setPosition(40.0f, 43.0f);
     creatorLabel->setScale(0.4f);
     addChild(creatorLabel);
@@ -59,19 +59,21 @@ bool BSHoverNode::init(SafeLevel const& level, GJGameLevel* gameLevel, MiniFunct
     addChild(starLayout);
 
     auto gsm = GameStatsManager::sharedState();
-    auto starsLabel = CCLabelBMFont::create(std::to_string(level.stars).c_str(), "bigFont.fnt");
+    auto starsLabel = CCLabelBMFont::create(std::to_string(gameLevel->m_stars.value()).c_str(), "bigFont.fnt");
     starsLabel->setScale(0.4f);
-    auto completedLevel = gsm->m_completedLevels->objectForKey(fmt::format("c_{}", level.id));
+    auto levelID = gameLevel->m_levelID.value();
+    auto completedLevel = gsm->m_completedLevels->objectForKey(fmt::format("c_{}", levelID).c_str());
     starsLabel->setColor(completedLevel ? ccColor3B { 255, 255, 50 } : ccColor3B { 255, 255, 255 });
     starLayout->addChild(starsLabel);
 
     starLayout->addChild(CCSprite::createWithSpriteFrameName("star_small01_001.png"));
 
-    for (int i = 1; i <= level.coins; i++) {
-        auto coinStr = fmt::format("{}_{}", level.id, i);
+    auto coinsVerified = gameLevel->m_coinsVerified.value() > 0;
+    for (int i = 1; i <= gameLevel->m_coins; i++) {
+        auto coinStr = fmt::format("{}_{}", levelID, i);
         auto hasCoin = gsm->hasUserCoin(coinStr.c_str()) || gsm->hasPendingUserCoin(coinStr.c_str());
         auto coinSprite = CCSprite::createWithSpriteFrameName("usercoin_small01_001.png");
-        if (level.coinsVerified) coinSprite->setColor(hasCoin ? ccColor3B { 255, 255, 255 } : ccColor3B { 165, 165, 165 });
+        if (coinsVerified) coinSprite->setColor(hasCoin ? ccColor3B { 255, 255, 255 } : ccColor3B { 165, 165, 165 });
         else coinSprite->setColor(hasCoin ? ccColor3B { 255, 175, 75 } : ccColor3B { 165, 113, 48 });
         starLayout->addChild(coinSprite);
     }

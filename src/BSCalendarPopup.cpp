@@ -225,7 +225,8 @@ void BSCalendarPopup::loadMonth() {
     for (auto& level : levelSafe) ids.push_back(std::to_string(level.id));
     auto searchObject = GJSearchObject::create(SearchType::MapPackOnClick, string::join(ids, ","));
     auto glm = GameLevelManager::sharedState();
-    if (auto storedLevels = glm->getStoredOnlineLevels(searchObject->getKey())) loadLevelsFinished(storedLevels, searchObject->getKey());
+    std::string key = searchObject->getKey();
+    if (auto storedLevels = glm->getStoredOnlineLevels(key.substr(std::max(0, (int)key.size() - 256)).c_str())) loadLevelsFinished(storedLevels, searchObject->getKey());
     else glm->getOnlineLevels(searchObject);
 }
 
@@ -275,14 +276,16 @@ void BSCalendarPopup::setupMonth() {
         if (gameLevelIt == levels.end()) continue;
         auto gameLevel = *gameLevelIt;
 
-        auto diffFrame = safeLevel.difficulty == -1 ? "diffIcon_auto_btn_001.png" : fmt::format("diffIcon_{:02d}_btn_001.png", safeLevel.difficulty);
+        auto levelDifficulty = BetterSafe::getDifficultyFromLevel(gameLevel);
+        auto diffFrame = levelDifficulty == -1 ? "diffIcon_auto_btn_001.png" : fmt::format("diffIcon_{:02d}_btn_001.png", levelDifficulty);
         if (auto moreDifficulties = Loader::get()->getLoadedMod("uproxide.more_difficulties")) {
             auto legacy = moreDifficulties->getSettingValue<bool>("legacy-difficulties");
-            if (moreDifficulties->getSavedValue<bool>("casual", true) && safeLevel.difficulty == 3 && safeLevel.stars == 4)
+            auto levelStars = gameLevel->m_stars.value();
+            if (moreDifficulties->getSavedValue<bool>("casual", true) && levelDifficulty == 3 && levelStars == 4)
                 diffFrame = legacy ? "uproxide.more_difficulties/MD_Difficulty04Small_Legacy.png" : "uproxide.more_difficulties/MD_Difficulty04Small.png";
-            else if (moreDifficulties->getSavedValue<bool>("tough", true) && safeLevel.difficulty == 4 && safeLevel.stars == 7)
+            else if (moreDifficulties->getSavedValue<bool>("tough", true) && levelDifficulty == 4 && levelStars == 7)
                 diffFrame = legacy ? "uproxide.more_difficulties/MD_Difficulty07Small_Legacy.png" : "uproxide.more_difficulties/MD_Difficulty07Small.png";
-            else if (moreDifficulties->getSavedValue<bool>("cruel", true) && safeLevel.difficulty == 5 && safeLevel.stars == 9)
+            else if (moreDifficulties->getSavedValue<bool>("cruel", true) && levelDifficulty == 5 && levelStars == 9)
                 diffFrame = legacy ? "uproxide.more_difficulties/MD_Difficulty09Small_Legacy.png" : "uproxide.more_difficulties/MD_Difficulty09Small.png";
         }
         auto hasBetweenDemon = false;
@@ -295,13 +298,14 @@ void BSCalendarPopup::setupMonth() {
         auto diffIcon = CCSprite::createWithSpriteFrameName(diffFrame.c_str());
         diffIcon->setScale(0.75f);
         auto featureFrame = "";
-        switch (safeLevel.feature) {
+        auto levelFeature = gameLevel->m_featured > 0 ? gameLevel->m_isEpic + 1 : 0;
+        switch (levelFeature) {
             case 1: featureFrame = "GJ_featuredCoin_001.png"; break;
             case 2: featureFrame = "GJ_epicCoin_001.png"; break;
             case 3: featureFrame = "GJ_epicCoin2_001.png"; break;
             case 4: featureFrame = "GJ_epicCoin3_001.png"; break;
         }
-        if (safeLevel.feature > 0) {
+        if (levelFeature > 0) {
             auto featureIcon = CCSprite::createWithSpriteFrameName(featureFrame);
             featureIcon->setPosition(diffIcon->getContentSize() / 2 + CCPoint { 0.0f, -5.5f });
             if (hasBetweenDemon) featureIcon->setPositionY(9.5f);

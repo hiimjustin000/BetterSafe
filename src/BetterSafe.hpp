@@ -13,13 +13,6 @@ struct SafeLevel {
     int id;
     int timelyID;
     std::vector<SafeDate> dates;
-    std::string name;
-    std::string creator;
-    int stars;
-    int difficulty;
-    int feature;
-    int coins;
-    bool coinsVerified;
     bool weekly;
     int tier;
 };
@@ -33,4 +26,5 @@ public:
     static void loadDailySafe(EventListener<web::WebTask>&&, LoadingCircle*, MiniFunction<void()>);
     static void loadWeeklySafe(EventListener<web::WebTask>&&, LoadingCircle*, MiniFunction<void()>);
     static std::vector<SafeLevel> getMonth(int year, int month, bool weekly);
+    static int getDifficultyFromLevel(GJGameLevel* level);
 };

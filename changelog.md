@@ -1,4 +1,7 @@
 # Better Safe Changelog
+## v1.0.4 (2024-09-21)
+- Fixed a bug where the level cache would reload when switching between months
+
 ## v1.0.3 (2024-09-14)
 - Fixed a bug where the game would crash when viewing the daily/weekly level previews
 
