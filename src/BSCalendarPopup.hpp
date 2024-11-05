@@ -1,6 +1,6 @@
 #include "BSHoverNode.hpp"
 
-class BSCalendarPopup : public geode::Popup<CCObject*, SEL_MenuHandler, bool>, public LevelManagerDelegate {
+class BSCalendarPopup : public geode::Popup<cocos2d::CCObject*, cocos2d::SEL_MenuHandler, bool>, public LevelManagerDelegate {
 public:
     inline static std::vector<int> DAYS_IN_MONTH = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
     inline static std::vector<std::string> MONTHS = {
@@ -11,7 +11,7 @@ public:
         16, 17, 18, 19, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20
     };
 protected:
-    EventListener<web::WebTask> m_listener;
+    geode::EventListener<geode::utils::web::WebTask> m_listener;
     bool m_weekly;
     int m_year;
     int m_firstYear;
@@ -19,9 +19,9 @@ protected:
     int m_month;
     int m_firstMonth;
     int m_currentMonth;
-    CCArray* m_levels;
-    CCMenu* m_calendarMenu;
-    CCLabelBMFont* m_monthLabel;
+    cocos2d::CCArray* m_levels;
+    cocos2d::CCMenu* m_calendarMenu;
+    cocos2d::CCLabelBMFont* m_monthLabel;
     CCMenuItemSpriteExtra* m_monthButton;
     BSHoverNode* m_hoverNode;
     LoadingCircle* m_loadingCircle;
@@ -30,24 +30,23 @@ protected:
     CCMenuItemSpriteExtra* m_firstButton;
     CCMenuItemSpriteExtra* m_lastButton;
 
-    bool setup(CCObject*, SEL_MenuHandler, bool) override;
+    bool setup(CCObject*, cocos2d::SEL_MenuHandler, bool) override;
 
     void createWeekdayLabel(const char* text, int idx);
     void loadMonth();
     void setupMonth();
 public:
-    static BSCalendarPopup* create(CCObject*, SEL_MenuHandler, bool);
+    static BSCalendarPopup* create(CCObject*, cocos2d::SEL_MenuHandler, bool);
 
-    void loadLevelsFinished(CCArray* levels, const char* key, int) override {
+    void loadLevelsFinished(cocos2d::CCArray* levels, const char* key, int) override {
         loadLevelsFinished(levels, key);
     }
-    void loadLevelsFinished(CCArray*, const char*) override;
+    void loadLevelsFinished(cocos2d::CCArray*, const char*) override;
     void loadLevelsFailed(const char* key, int) override {
         loadLevelsFailed(key);
     }
     void loadLevelsFailed(const char*) override {
         m_loadingCircle->setVisible(false);
-        m_loadingCircle->fadeAndRemove();
         FLAlertLayer::create("Load Failed", "Failed to load safe levels. Please try again later.", "OK")->show();
     }
     void setupPageInfo(gd::string, const char*) override {}
@@ -55,12 +54,12 @@ public:
     ~BSCalendarPopup() override;
 };
 
-class BSSelectPopup : public geode::Popup<int, int, int, int, int, int, MiniFunction<void(int, int)>> {
+class BSSelectPopup : public geode::Popup<int, int, int, int, int, int, std::function<void(int, int)> const&> {
 protected:
     int m_year;
     int m_month;
 
-    bool setup(int, int, int, int, int, int, MiniFunction<void(int, int)>) override;
+    bool setup(int, int, int, int, int, int, std::function<void(int, int)> const&) override;
 public:
-    static BSSelectPopup* create(int, int, int, int, int, int, MiniFunction<void(int, int)>);
+    static BSSelectPopup* create(int, int, int, int, int, int, std::function<void(int, int)> const&);
 };

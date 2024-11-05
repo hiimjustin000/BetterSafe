@@ -1,7 +1,4 @@
-#include <Geode/Geode.hpp>
 #include <Geode/utils/web.hpp>
-
-using namespace geode::prelude;
 
 struct SafeDate {
     int year;
@@ -23,8 +20,8 @@ public:
     inline static std::vector<SafeLevel> WEEKLY_SAFE;
 
     static SafeDate parseDate(const std::string&);
-    static void loadDailySafe(EventListener<web::WebTask>&&, LoadingCircle*, MiniFunction<void()>);
-    static void loadWeeklySafe(EventListener<web::WebTask>&&, LoadingCircle*, MiniFunction<void()>);
+    static void loadDailySafe(geode::EventListener<geode::utils::web::WebTask>&&, LoadingCircle*, std::function<void()> const&);
+    static void loadWeeklySafe(geode::EventListener<geode::utils::web::WebTask>&&, LoadingCircle*, std::function<void()> const&);
     static std::vector<SafeLevel> getMonth(int year, int month, bool weekly);
     static int getDifficultyFromLevel(GJGameLevel* level);
 };

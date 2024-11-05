@@ -111,9 +111,7 @@ bool BSCalendarPopup::setup(CCObject* obj, SEL_MenuHandler onSafe, bool weekly) 
     m_loadingCircle->retain();
     m_loadingCircle->show();
 
-    auto safeButton = CCMenuItemExt::createSpriteExtraWithFrameName("GJ_safeBtn_001.png", 1.0f, [this, obj, onSafe](auto sender) {
-        (obj->*onSafe)(sender);
-    });
+    auto safeButton = CCMenuItemSpriteExtra::create(CCSprite::createWithSpriteFrameName("GJ_safeBtn_001.png"), obj, onSafe);
     safeButton->setPosition(340.0f, 25.0f);
     safeButton->setTag(91508); // my birthday
     m_buttonMenu->addChild(safeButton);
@@ -221,19 +219,24 @@ void BSCalendarPopup::loadMonth() {
     m_lastButton->setVisible(false);
 
     auto levelSafe = BetterSafe::getMonth(m_year, m_month, m_weekly);
+    if (levelSafe.empty()) {
+        loadLevelsFinished(CCArray::create(), "");
+        return;
+    }
     std::vector<std::string> ids;
     for (auto& level : levelSafe) ids.push_back(std::to_string(level.id));
     auto searchObject = GJSearchObject::create(SearchType::MapPackOnClick, string::join(ids, ","));
     auto glm = GameLevelManager::sharedState();
     std::string key = searchObject->getKey();
-    if (auto storedLevels = glm->getStoredOnlineLevels(key.substr(std::max(0, (int)key.size() - 256)).c_str())) loadLevelsFinished(storedLevels, searchObject->getKey());
+    if (auto storedLevels = glm->getStoredOnlineLevels(key.substr(std::max(0, (int)key.size() - 256)).c_str()))
+        loadLevelsFinished(storedLevels, searchObject->getKey());
     else glm->getOnlineLevels(searchObject);
 }
 
 void BSCalendarPopup::loadLevelsFinished(CCArray* levels, const char*) {
     CC_SAFE_RELEASE(m_levels);
+    CC_SAFE_RETAIN(levels);
     m_levels = levels;
-    m_levels->retain();
     setupMonth();
 }
 
@@ -329,7 +332,7 @@ BSCalendarPopup::~BSCalendarPopup() {
     if (glm->m_levelManagerDelegate == this) glm->m_levelManagerDelegate = nullptr;
 }
 
-BSSelectPopup* BSSelectPopup::create(int year, int month, int minYear, int minMonth, int maxYear, int maxMonth, MiniFunction<void(int, int)> callback) {
+BSSelectPopup* BSSelectPopup::create(int year, int month, int minYear, int minMonth, int maxYear, int maxMonth, std::function<void(int, int)> const& callback) {
     auto ret = new BSSelectPopup();
     if (ret->initAnchored(250.0f, 150.0f, year, month, minYear, minMonth, maxYear, maxMonth, callback)) {
         ret->autorelease();
@@ -339,7 +342,7 @@ BSSelectPopup* BSSelectPopup::create(int year, int month, int minYear, int minMo
     return nullptr;
 }
 
-bool BSSelectPopup::setup(int year, int month, int minYear, int minMonth, int maxYear, int maxMonth, MiniFunction<void(int, int)> callback) {
+bool BSSelectPopup::setup(int year, int month, int minYear, int minMonth, int maxYear, int maxMonth, std::function<void(int, int)> const& callback) {
     setTitle("Select Date");
 
     m_noElasticity = true;

@@ -1,5 +1,7 @@
 #include "BetterSafe.hpp"
 
+using namespace geode::prelude;
+
 #define DAILY_SAFE_URL "https://raw.githubusercontent.com/hiimjustin000/the-safe/master/daily.json"
 #define WEEKLY_SAFE_URL "https://raw.githubusercontent.com/hiimjustin000/the-safe/master/weekly.json"
 
@@ -14,7 +16,7 @@ SafeDate BetterSafe::parseDate(const std::string& date) {
 
 #define PROPERTY_OR_DEFAULT(obj, prop, isFunc, asFunc, def) (obj.contains(prop) && obj[prop].isFunc() ? obj[prop].asFunc() : def)
 
-void BetterSafe::loadDailySafe(EventListener<web::WebTask>&& listenerRef, LoadingCircle* circle, MiniFunction<void()> callback) {
+void BetterSafe::loadDailySafe(EventListener<web::WebTask>&& listenerRef, LoadingCircle* circle, std::function<void()> const& callback) {
     if (DAILY_SAFE.size()) return callback();
 
     auto&& listener = std::move(listenerRef);
@@ -25,6 +27,11 @@ void BetterSafe::loadDailySafe(EventListener<web::WebTask>&& listenerRef, Loadin
                 auto str = res->string().value();
                 std::string error;
                 auto json = matjson::parse(str, error).value_or(matjson::Array());
+                if (!error.empty() || !json.is_array()) {
+                    FLAlertLayer::create("Parse Failed", "Failed to parse the daily safe. Please try again later.", "OK")->show();
+                    circle->setVisible(false);
+                    return;
+                }
                 for (auto& level : json.as_array()) {
                     std::vector<SafeDate> dates;
                     dates.push_back(parseDate(PROPERTY_OR_DEFAULT(level, "date", is_string, as_string, "1970-01-01")));
@@ -49,7 +56,7 @@ void BetterSafe::loadDailySafe(EventListener<web::WebTask>&& listenerRef, Loadin
     listener.setFilter(web::WebRequest().get(DAILY_SAFE_URL));
 }
 
-void BetterSafe::loadWeeklySafe(EventListener<web::WebTask>&& listenerRef, LoadingCircle* circle, MiniFunction<void()> callback) {
+void BetterSafe::loadWeeklySafe(EventListener<web::WebTask>&& listenerRef, LoadingCircle* circle, std::function<void()> const& callback) {
     if (WEEKLY_SAFE.size()) return callback();
 
     auto&& listener = std::move(listenerRef);
@@ -60,6 +67,11 @@ void BetterSafe::loadWeeklySafe(EventListener<web::WebTask>&& listenerRef, Loadi
                 auto str = res->string().value();
                 std::string error;
                 auto json = matjson::parse(str, error).value_or(matjson::Array());
+                if (!error.empty() || !json.is_array()) {
+                    FLAlertLayer::create("Parse Failed", "Failed to parse the weekly safe. Please try again later.", "OK")->show();
+                    circle->setVisible(false);
+                    return;
+                }
                 for (auto& level : json.as_array()) {
                     std::vector<SafeDate> dates;
                     if (level.contains("dates") && level["dates"].is_array()) {

@@ -1,6 +1,8 @@
 #include "BSHoverNode.hpp"
 
-BSHoverNode* BSHoverNode::create(SafeLevel const& level, GJGameLevel* gameLevel, MiniFunction<void()> callback) {
+using namespace geode::prelude;
+
+BSHoverNode* BSHoverNode::create(SafeLevel const& level, GJGameLevel* gameLevel, std::function<void()> const& callback) {
     auto ret = new BSHoverNode();
     if (ret->init(level, gameLevel, callback)) {
         ret->autorelease();
@@ -10,7 +12,7 @@ BSHoverNode* BSHoverNode::create(SafeLevel const& level, GJGameLevel* gameLevel,
     return nullptr;
 }
 
-bool BSHoverNode::init(SafeLevel const& level, GJGameLevel* gameLevel, MiniFunction<void()> callback) {
+bool BSHoverNode::init(SafeLevel const& level, GJGameLevel* gameLevel, std::function<void()> const& callback) {
     if (!CCLayer::init()) return false;
 
     setAnchorPoint({ 0.5f, 0.5f });

@@ -1,4 +1,7 @@
 # Better Safe Changelog
+## v1.0.5 (2024-11-05)
+- Fixed a bug where levels would not load on an empty month
+
 ## v1.0.4 (2024-09-21)
 - Fixed a bug where the level cache would reload when switching between months
 
