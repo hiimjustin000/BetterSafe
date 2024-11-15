@@ -1,4 +1,8 @@
 # Better Safe Changelog
+## v1.1.0-beta.1 (2024-11-14)
+- Added event levels from the new Geometry Dash update
+- Ported to Geometry Dash v2.207
+
 ## v1.0.5 (2024-11-05)
 - Fixed a bug where levels would not load on an empty month
 

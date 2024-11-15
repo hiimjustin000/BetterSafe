@@ -4,7 +4,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_OSX_ARCHITECTURES "x86_64;arm64")
 set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 
-project(BetterSafe VERSION 1.0.5)
+project(BetterSafe VERSION 1.1.0)
 
 add_library(${PROJECT_NAME} SHARED
     src/BetterSafe.cpp

@@ -2,112 +2,110 @@
 
 using namespace geode::prelude;
 
-#define DAILY_SAFE_URL "https://raw.githubusercontent.com/hiimjustin000/the-safe/master/daily.json"
-#define WEEKLY_SAFE_URL "https://raw.githubusercontent.com/hiimjustin000/the-safe/master/weekly.json"
+#define DAILY_SAFE_URL "https://raw.githubusercontent.com/hiimjustin000/the-safe/master/v2/daily.json"
+#define WEEKLY_SAFE_URL "https://raw.githubusercontent.com/hiimjustin000/the-safe/master/v2/weekly.json"
+#define EVENT_SAFE_URL "https://raw.githubusercontent.com/hiimjustin000/the-safe/master/v2/event.json"
 
 SafeDate BetterSafe::parseDate(const std::string& date) {
     auto parts = string::split(date, "-");
     return {
-        .year = parts.size() > 0 ? numFromString<int>(parts[0]).value_or(1970) : 1970,
-        .month = parts.size() > 1 ? numFromString<int>(parts[1]).value_or(1) : 1,
-        .day = parts.size() > 2 ? numFromString<int>(parts[2]).value_or(1) : 1
+        .year = parts.size() > 0 ? numFromString<int>(parts[0]).unwrapOr(1970) : 1970,
+        .month = parts.size() > 1 ? numFromString<int>(parts[1]).unwrapOr(1) : 1,
+        .day = parts.size() > 2 ? numFromString<int>(parts[2]).unwrapOr(1) : 1
     };
 }
 
-#define PROPERTY_OR_DEFAULT(obj, prop, isFunc, asFunc, def) (obj.contains(prop) && obj[prop].isFunc() ? obj[prop].asFunc() : def)
-
-void BetterSafe::loadDailySafe(EventListener<web::WebTask>&& listenerRef, LoadingCircle* circle, std::function<void()> const& callback) {
-    if (DAILY_SAFE.size()) return callback();
-
-    auto&& listener = std::move(listenerRef);
-
-    listener.bind([callback, circle](web::WebTask::Event* e) {
-        if (auto res = e->getValue()) {
-            if (res->ok()) {
-                auto str = res->string().value();
-                std::string error;
-                auto json = matjson::parse(str, error).value_or(matjson::Array());
-                if (!error.empty() || !json.is_array()) {
-                    FLAlertLayer::create("Parse Failed", "Failed to parse the daily safe. Please try again later.", "OK")->show();
-                    circle->setVisible(false);
-                    return;
-                }
-                for (auto& level : json.as_array()) {
-                    std::vector<SafeDate> dates;
-                    dates.push_back(parseDate(PROPERTY_OR_DEFAULT(level, "date", is_string, as_string, "1970-01-01")));
-                    if (dates[0].year == 1970 && dates[0].month == 1 && dates[0].day == 1) dates.clear();
-                    DAILY_SAFE.push_back({
-                        .id = PROPERTY_OR_DEFAULT(level, "id", is_number, as_int, 0),
-                        .timelyID = PROPERTY_OR_DEFAULT(level, "dailyID", is_number, as_int, 0),
-                        .dates = dates,
-                        .weekly = false,
-                        .tier = PROPERTY_OR_DEFAULT(level, "tier", is_number, as_int, 0)
-                    });
-                }
-                callback();
-            }
-            else {
-                FLAlertLayer::create(fmt::format("Load Failed ({})", res->code()).c_str(), "Failed to load the daily safe. Please try again later.", "OK")->show();
-                circle->setVisible(false);
-            }
-        }
-    });
-
-    listener.setFilter(web::WebRequest().get(DAILY_SAFE_URL));
+SafeDate BetterSafe::dateFromTime(time_t time) {
+    #ifdef GEODE_IS_WINDOWS
+    struct tm timeinfo;
+    localtime_s(&timeinfo, &time);
+    #else
+    auto timeinfo = *std::localtime(&time);
+    #endif
+    return { timeinfo.tm_year + 1900, timeinfo.tm_mon + 1, timeinfo.tm_mday };
 }
 
-void BetterSafe::loadWeeklySafe(EventListener<web::WebTask>&& listenerRef, LoadingCircle* circle, std::function<void()> const& callback) {
-    if (WEEKLY_SAFE.size()) return callback();
+void BetterSafe::loadSafe(GJTimedLevelType type, EventListener<web::WebTask>&& listenerRef, LoadingCircle* circle, std::function<void()> const& callback) {
+    if (!getSafeLevels(type).empty()) return callback();
 
     auto&& listener = std::move(listenerRef);
 
-    listener.bind([callback, circle](web::WebTask::Event* e) {
+    listener.bind([callback, circle, type](web::WebTask::Event* e) {
         if (auto res = e->getValue()) {
-            if (res->ok()) {
-                auto str = res->string().value();
-                std::string error;
-                auto json = matjson::parse(str, error).value_or(matjson::Array());
-                if (!error.empty() || !json.is_array()) {
-                    FLAlertLayer::create("Parse Failed", "Failed to parse the weekly safe. Please try again later.", "OK")->show();
-                    circle->setVisible(false);
-                    return;
-                }
-                for (auto& level : json.as_array()) {
-                    std::vector<SafeDate> dates;
-                    if (level.contains("dates") && level["dates"].is_array()) {
-                        for (auto& date : level["dates"].as_array()) {
-                            dates.push_back(parseDate(date.as_string()));
-                        }
+            if (!res->ok()) {
+                FLAlertLayer::create(fmt::format("Load Failed ({})", res->code()).c_str(), "Failed to load the safe. Please try again later.", "OK")->show();
+                circle->setVisible(false);
+                return;
+            }
+
+            auto json = res->json().unwrapOr(std::vector<matjson::Value>());
+            if (!json.isArray()) {
+                FLAlertLayer::create("Parse Failed", "Failed to parse the safe. Please try again later.", "OK")->show();
+                circle->setVisible(false);
+                return;
+            }
+
+            for (auto& level : json.asArray().unwrap()) {
+                std::vector<SafeDate> dates;
+                if (level.contains("dates") && level["dates"].isArray()) {
+                    for (auto& date : level["dates"].asArray().unwrap()) {
+                        dates.push_back(parseDate(date.asString().unwrapOr("1970-01-01")));
                     }
-                    WEEKLY_SAFE.push_back({
-                        .id = PROPERTY_OR_DEFAULT(level, "id", is_number, as_int, 0),
-                        .timelyID = PROPERTY_OR_DEFAULT(level, "weeklyID", is_number, as_int, 0),
-                        .dates = dates,
-                        .weekly = true,
-                        .tier = PROPERTY_OR_DEFAULT(level, "tier", is_number, as_int, 0)
-                    });
                 }
+                getSafeLevels(type).push_back({
+                    .id = (int)level["id"].asInt().unwrapOr(0),
+                    .timelyID = (int)level["timelyID"].asInt().unwrapOr(0),
+                    .dates = dates,
+                    .type = type,
+                    .tier = (int)level["tier"].asInt().unwrapOr(0)
+                });
+            }
+
+            if (type != GJTimedLevelType::Event || EVENT_SAFE.size() < 2) {
                 callback();
+                return;
             }
-            else {
-                FLAlertLayer::create(fmt::format("Load Failed ({})", res->code()).c_str(), "Failed to load the weekly safe. Please try again later.", "OK")->show();
-                circle->setVisible(false);
+
+            auto lastEventDate = EVENT_SAFE[1].dates.back();
+            tm timeinfo = { 0, 0, 0, lastEventDate.day, lastEventDate.month - 1, lastEventDate.year - 1900 };
+            auto truncatedTime = time(0) / 86400 * 86400;
+            for (auto lastEventTime = mktime(&timeinfo) + 86400; lastEventTime < truncatedTime; lastEventTime += 86400) {
+                EVENT_SAFE[0].dates.push_back(dateFromTime(lastEventTime));
             }
+
+            callback();
         }
     });
 
-    listener.setFilter(web::WebRequest().get(WEEKLY_SAFE_URL));
+    switch (type) {
+        case GJTimedLevelType::Daily: listener.setFilter(web::WebRequest().get(DAILY_SAFE_URL)); break;
+        case GJTimedLevelType::Weekly: listener.setFilter(web::WebRequest().get(WEEKLY_SAFE_URL)); break;
+        case GJTimedLevelType::Event: listener.setFilter(web::WebRequest().get(EVENT_SAFE_URL)); break;
+        default: break;
+    }
 }
 
-std::vector<SafeLevel> BetterSafe::getMonth(int year, int month, bool weekly) {
+std::vector<SafeLevel> BetterSafe::getMonth(int year, int month, GJTimedLevelType type) {
     std::vector<SafeLevel> levels;
-    auto& safe = weekly ? WEEKLY_SAFE : DAILY_SAFE;
+    auto& safe = getSafeLevels(type);
     for (auto& level : safe) {
         for (auto& date : level.dates) {
             if (date.year == year && date.month == month) levels.push_back(level);
         }
     }
     return levels;
+}
+
+std::vector<SafeLevel>& BetterSafe::getSafeLevels(GJTimedLevelType type) {
+    switch (type) {
+        case GJTimedLevelType::Daily: return DAILY_SAFE;
+        case GJTimedLevelType::Weekly: return WEEKLY_SAFE;
+        case GJTimedLevelType::Event: return EVENT_SAFE;
+        default: {
+            static std::vector<SafeLevel> empty;
+            return empty;
+        }
+    }
 }
 
 int BetterSafe::getDifficultyFromLevel(GJGameLevel* level) {

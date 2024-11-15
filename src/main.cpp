@@ -12,7 +12,20 @@ class $modify(BSMenuLayer, MenuLayer) {
     };
 
     static void onModify(auto& self) {
-        (void)self.setHookPriority("MenuLayer::init", INT_MIN / 2);
+        if (auto initHookRes = self.getHook("MenuLayer::init")) {
+            auto initHook = initHookRes.unwrap();
+            if (auto overcharged = Loader::get()->getInstalledMod("ninxout.redash")) {
+                if (overcharged->shouldLoad()) {
+                    initHook->setPriority(INT_MIN / 2);
+                    return;
+                }
+            }
+
+            queueInMainThread([initHook] {
+                if (!initHook->disable()) log::error("Failed to disable MenuLayer::init hook");
+            });
+        }
+        else log::error("Failed to find MenuLayer::init hook");
     }
 
     bool init() {
@@ -23,7 +36,7 @@ class $modify(BSMenuLayer, MenuLayer) {
 
         auto dailiesMenu = redashMenu->getChildByID("ninxout.redash/dailies-menu");
         if (!dailiesMenu) return true;
-        
+
         auto f = m_fields.self();
 
         auto dailyNode = dailiesMenu->getChildByID("daily-node");
@@ -37,7 +50,7 @@ class $modify(BSMenuLayer, MenuLayer) {
         auto weeklyNode = dailiesMenu->getChildByID("weekly-node");
         auto weeklySafeButton = static_cast<CCMenuItemSpriteExtra*>(weeklyNode ? weeklyNode->getChildByIDRecursive("safe-button") : nullptr);
         if (weeklyNode && weeklySafeButton) {
-            f->m_weeklySafeListener = weeklyNode;
+            f->m_weeklySafeListener = weeklySafeButton->m_pListener;
             f->m_weeklySafeSelector = weeklySafeButton->m_pfnSelector;
             weeklySafeButton->setTarget(this, menu_selector(BSMenuLayer::onTheWeeklySafe));
         }
@@ -47,12 +60,12 @@ class $modify(BSMenuLayer, MenuLayer) {
 
     void onTheDailySafe(CCObject*) {
         auto f = m_fields.self();
-        BSCalendarPopup::create(f->m_dailySafeListener, f->m_dailySafeSelector, false)->show();
+        BSCalendarPopup::create(f->m_dailySafeListener, f->m_dailySafeSelector, GJTimedLevelType::Daily)->show();
     }
 
     void onTheWeeklySafe(CCObject*) {
         auto f = m_fields.self();
-        BSCalendarPopup::create(f->m_weeklySafeListener, f->m_weeklySafeSelector, true)->show();
+        BSCalendarPopup::create(f->m_weeklySafeListener, f->m_weeklySafeSelector, GJTimedLevelType::Weekly)->show();
     }
 };
 
@@ -60,6 +73,6 @@ class $modify(BSMenuLayer, MenuLayer) {
 class $modify(BSDailyLevelPage, DailyLevelPage) {
     void onTheSafe(CCObject* sender) {
         if (sender->getTag() == 91508) DailyLevelPage::onTheSafe(sender);
-        else BSCalendarPopup::create(this, menu_selector(DailyLevelPage::onTheSafe), m_type == GJTimedLevelType::Weekly)->show();
+        else BSCalendarPopup::create(this, menu_selector(DailyLevelPage::onTheSafe), m_type)->show();
     }
 };

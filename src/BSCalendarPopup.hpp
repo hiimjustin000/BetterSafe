@@ -1,6 +1,6 @@
 #include "BSHoverNode.hpp"
 
-class BSCalendarPopup : public geode::Popup<cocos2d::CCObject*, cocos2d::SEL_MenuHandler, bool>, public LevelManagerDelegate {
+class BSCalendarPopup : public geode::Popup<cocos2d::CCObject*, cocos2d::SEL_MenuHandler, GJTimedLevelType>, public LevelManagerDelegate {
 public:
     inline static std::vector<int> DAYS_IN_MONTH = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
     inline static std::vector<std::string> MONTHS = {
@@ -12,7 +12,7 @@ public:
     };
 protected:
     geode::EventListener<geode::utils::web::WebTask> m_listener;
-    bool m_weekly;
+    GJTimedLevelType m_type;
     int m_year;
     int m_firstYear;
     int m_currentYear;
@@ -30,13 +30,13 @@ protected:
     CCMenuItemSpriteExtra* m_firstButton;
     CCMenuItemSpriteExtra* m_lastButton;
 
-    bool setup(CCObject*, cocos2d::SEL_MenuHandler, bool) override;
+    bool setup(CCObject*, cocos2d::SEL_MenuHandler, GJTimedLevelType) override;
 
     void createWeekdayLabel(const char* text, int idx);
     void loadMonth();
     void setupMonth();
 public:
-    static BSCalendarPopup* create(CCObject*, cocos2d::SEL_MenuHandler, bool);
+    static BSCalendarPopup* create(CCObject*, cocos2d::SEL_MenuHandler, GJTimedLevelType);
 
     void loadLevelsFinished(cocos2d::CCArray* levels, const char* key, int) override {
         loadLevelsFinished(levels, key);

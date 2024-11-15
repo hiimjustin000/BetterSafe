@@ -25,23 +25,30 @@ bool BSHoverNode::init(SafeLevel const& level, GJGameLevel* gameLevel, std::func
 
     m_background = CCScale9Sprite::create("square02_001.png");
     m_background->setContentSize({ 80.0f, 70.0f });
-    m_background->setPosition(40.0f, 35.0f);
+    m_background->setPosition({ 40.0f, 35.0f });
     m_background->setColor({ 0, 0, 0 });
     m_background->setOpacity(150);
     addChild(m_background);
 
-    auto dailyLabel = CCLabelBMFont::create(fmt::format("{} #{}", level.weekly ? "Weekly" : "Daily", level.timelyID).c_str(), "goldFont.fnt");
-    dailyLabel->setPosition(40.0f, 65.0f);
+    auto timedName = "";
+    switch (level.type) {
+        case GJTimedLevelType::Daily: timedName = "Daily"; break;
+        case GJTimedLevelType::Weekly: timedName = "Weekly"; break;
+        case GJTimedLevelType::Event: timedName = "Event"; break;
+        default: break;
+    }
+    auto dailyLabel = CCLabelBMFont::create(fmt::format("{} #{}", timedName, level.timelyID).c_str(), "goldFont.fnt");
+    dailyLabel->setPosition({ 40.0f, 65.0f });
     dailyLabel->setScale(0.3f);
     addChild(dailyLabel);
 
     auto nameLabel = CCLabelBMFont::create(gameLevel->m_levelName.c_str(), "bigFont.fnt");
-    nameLabel->setPosition(40.0f, 55.0f);
+    nameLabel->setPosition({ 40.0f, 55.0f });
     nameLabel->setScale(0.5f);
     addChild(nameLabel);
 
     auto creatorLabel = CCLabelBMFont::create(("by " + std::string(gameLevel->m_creatorName)).c_str(), "goldFont.fnt");
-    creatorLabel->setPosition(40.0f, 43.0f);
+    creatorLabel->setPosition({ 40.0f, 43.0f });
     creatorLabel->setScale(0.4f);
     addChild(creatorLabel);
 
@@ -54,13 +61,13 @@ bool BSHoverNode::init(SafeLevel const& level, GJGameLevel* gameLevel, std::func
     creatorLabel->setPositionX(getContentWidth() / 2);
 
     auto starLayout = CCNode::create();
-    starLayout->setPosition(getContentWidth() / 2, 30.0f);
+    starLayout->setPosition({ getContentWidth() / 2, 30.0f });
     starLayout->setContentSize({ 80.0f, 15.0f });
     starLayout->setAnchorPoint({ 0.5f, 0.5f });
     starLayout->setLayout(RowLayout::create()->setGap(1.75f)->setAutoScale(false));
     addChild(starLayout);
 
-    auto gsm = GameStatsManager::sharedState();
+    auto gsm = GameStatsManager::get();
     auto starsLabel = CCLabelBMFont::create(std::to_string(gameLevel->m_stars.value()).c_str(), "bigFont.fnt");
     starsLabel->setScale(0.4f);
     auto levelID = gameLevel->m_levelID.value();
@@ -83,13 +90,13 @@ bool BSHoverNode::init(SafeLevel const& level, GJGameLevel* gameLevel, std::func
     starLayout->updateLayout();
 
     auto viewMenu = CCMenu::create();
-    viewMenu->setPosition(getContentWidth() / 2, 12.0f);
+    viewMenu->setPosition({ getContentWidth() / 2, 12.0f });
     addChild(viewMenu);
 
     auto viewSprite = ButtonSprite::create("View", "goldFont.fnt", "GJ_button_01.png", 0.8f);
     viewSprite->setScale(0.7f);
     viewMenu->addChild(CCMenuItemExt::createSpriteExtra(viewSprite, [this, gameLevel](auto) {
-        GameLevelManager::sharedState()->gotoLevelPage(gameLevel);
+        GameLevelManager::get()->gotoLevelPage(gameLevel);
     }));
 
     auto closeButton = CCMenuItemExt::createSpriteExtraWithFrameName("GJ_closeBtn_001.png", 0.5f, [this] (auto) { close(); });
@@ -122,7 +129,7 @@ void BSHoverNode::registerWithTouchDispatcher() {
 bool BSHoverNode::ccTouchBegan(CCTouch* touch, CCEvent* event) {
     if (!CCLayer::ccTouchBegan(touch, event)) return false;
 
-    auto touchPos = m_background->convertToNodeSpace(CCDirector::sharedDirector()->convertToGL(touch->getLocationInView()));
+    auto touchPos = m_background->convertToNodeSpace(CCDirector::get()->convertToGL(touch->getLocationInView()));
     auto boundingBox = m_background->boundingBox();
     return CCRect {
         boundingBox.getMinX(),
