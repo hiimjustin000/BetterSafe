@@ -2,8 +2,8 @@
 A mod that expands The Safe with a calendar.
 
 # Features
-- Calendars for daily and weekly levels, showing what was featured on each day
-- Daily and weekly level previews, showing basic information about the level on click
+- Calendars for daily, weekly and event levels, showing what was featured on each day
+- daily, weekly and event level previews, showing basic information about the level on click
 - Navigation buttons to go to the previous or next month
 - A label showing the current month and year, which can be used to switch to a specific month
 
