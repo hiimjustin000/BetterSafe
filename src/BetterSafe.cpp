@@ -68,8 +68,10 @@ void BetterSafe::loadSafe(GJTimedLevelType type, EventListener<web::WebTask>&& l
 
             auto lastEventDate = EVENT_SAFE[1].dates.back();
             tm timeinfo = { 0, 0, 0, lastEventDate.day, lastEventDate.month - 1, lastEventDate.year - 1900 };
-            auto truncatedTime = time(0) / 86400 * 86400;
-            for (auto lastEventTime = mktime(&timeinfo) + 86400; lastEventTime < truncatedTime; lastEventTime += 86400) {
+            auto currentDate = dateFromTime(time(0));
+            tm currentTimeinfo = { 0, 0, 0, currentDate.day, currentDate.month - 1, currentDate.year - 1900 };
+            auto truncatedTime = mktime(&currentTimeinfo);
+            for (auto lastEventTime = mktime(&timeinfo) + 86400; lastEventTime <= truncatedTime; lastEventTime += 86400) {
                 EVENT_SAFE[0].dates.push_back(dateFromTime(lastEventTime));
             }
 

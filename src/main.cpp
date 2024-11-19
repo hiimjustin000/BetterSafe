@@ -9,6 +9,8 @@ class $modify(BSMenuLayer, MenuLayer) {
         SEL_MenuHandler m_dailySafeSelector;
         CCObject* m_weeklySafeListener;
         SEL_MenuHandler m_weeklySafeSelector;
+        CCObject* m_eventSafeListener;
+        SEL_MenuHandler m_eventSafeSelector;
     };
 
     static void onModify(auto& self) {
@@ -55,6 +57,14 @@ class $modify(BSMenuLayer, MenuLayer) {
             weeklySafeButton->setTarget(this, menu_selector(BSMenuLayer::onTheWeeklySafe));
         }
 
+        auto eventNode = dailiesMenu->getChildByID("event-node");
+        auto eventSafeButton = static_cast<CCMenuItemSpriteExtra*>(eventNode ? eventNode->getChildByIDRecursive("safe-button") : nullptr);
+        if (eventNode && eventSafeButton) {
+            f->m_eventSafeListener = eventSafeButton->m_pListener;
+            f->m_eventSafeSelector = eventSafeButton->m_pfnSelector;
+            eventSafeButton->setTarget(this, menu_selector(BSMenuLayer::onTheEventSafe));
+        }
+
         return true;
     }
 
@@ -66,6 +76,11 @@ class $modify(BSMenuLayer, MenuLayer) {
     void onTheWeeklySafe(CCObject*) {
         auto f = m_fields.self();
         BSCalendarPopup::create(f->m_weeklySafeListener, f->m_weeklySafeSelector, GJTimedLevelType::Weekly)->show();
+    }
+
+    void onTheEventSafe(CCObject*) {
+        auto f = m_fields.self();
+        BSCalendarPopup::create(f->m_eventSafeListener, f->m_eventSafeSelector, GJTimedLevelType::Event)->show();
     }
 };
 

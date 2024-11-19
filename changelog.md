@@ -1,4 +1,7 @@
 # Better Safe Changelog
+## v1.1.1 (2024-11-19)
+- Fixed a bug where the event level would not properly fill in the current day if you were not British
+
 ## v1.1.0 (2024-11-15)
 - Ported to Geode v4.0.0-beta.1
 
