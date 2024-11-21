@@ -4,7 +4,7 @@ using namespace geode::prelude;
 
 BSCalendarPopup* BSCalendarPopup::create(CCObject* obj, SEL_MenuHandler onSafe, GJTimedLevelType type) {
     auto ret = new BSCalendarPopup();
-    if (ret->initAnchored(300.0f, 280.0f, obj, onSafe, type)) {
+    if (ret->initAnchored(300.0f, 280.0f, obj, onSafe, type, type == GJTimedLevelType::Daily ? "GJ_square01.png" : "GJ_square05.png")) {
         ret->autorelease();
         return ret;
     }
@@ -16,6 +16,8 @@ bool BSCalendarPopup::setup(CCObject* obj, SEL_MenuHandler onSafe, GJTimedLevelT
     m_noElasticity = true;
     m_type = type;
 
+    if (type == GJTimedLevelType::Event) m_bgSprite->setColor({ 190, 47, 242 });
+
     auto sundayFirst = Mod::get()->getSettingValue<bool>("sunday-first");
     createWeekdayLabel("Mon", (int)sundayFirst);
     createWeekdayLabel("Tue", (int)sundayFirst + 1);
@@ -25,8 +27,7 @@ bool BSCalendarPopup::setup(CCObject* obj, SEL_MenuHandler onSafe, GJTimedLevelT
     createWeekdayLabel("Sat", (int)sundayFirst + 5);
     createWeekdayLabel("Sun", sundayFirst ? 0 : 6);
 
-    auto glm = GameLevelManager::get();
-    glm->m_levelManagerDelegate = this;
+    GameLevelManager::get()->m_levelManagerDelegate = this;
 
     m_prevButton = CCMenuItemExt::createSpriteExtraWithFrameName("GJ_arrow_01_001.png", 1.0f, [this](auto) {
         if (m_year == m_firstYear && m_month == m_firstMonth) return;
@@ -125,10 +126,9 @@ bool BSCalendarPopup::setup(CCObject* obj, SEL_MenuHandler onSafe, GJTimedLevelT
         m_firstButton->setVisible(false);
         m_lastButton->setVisible(false);
         m_monthButton->setEnabled(false);
-        auto& safe = BetterSafe::getSafeLevels(type);
-        safe.clear();
-        BetterSafe::loadSafe(type, std::move(m_listener), m_loadingCircle, [this, safe] {
-            if (!safe.empty()) loadMonth();
+        BetterSafe::getSafeLevels(type).clear();
+        BetterSafe::loadSafe(type, std::move(m_listener), m_loadingCircle, [this, type] {
+            if (!BetterSafe::getSafeLevels(type).empty()) loadMonth();
         });
     });
     refreshButton->setPosition({ 340.0f, 80.0f });
