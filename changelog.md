@@ -1,7 +1,7 @@
 # Better Safe Changelog
 ## v1.1.2 (2024-11-20)
 - Changed the background color of the calendar to match the daily/weekly/event level previews
-- Fixed a bug where the refresh button would not load the levels properly
+- Fixed a bug where the refresh button would not load the levels properly ([#5](https://github.com/hiimjustin000/BetterSafe/issues/5))
 
 ## v1.1.1 (2024-11-19)
 - Fixed a bug where the event level would not properly fill in the current day if you were not British
